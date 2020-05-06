@@ -1,0 +1,146 @@
+<!DOCTYPE html>
+<html lang="en">
+<style>
+input[type=text], select {
+  width: 25%;
+  padding: 12px 20px;
+  margin: 8px 0;
+  display: inline-block;
+  border: 1px solid #ccc;
+  border-radius: 4px;
+  box-sizing: border-box;
+}
+
+button{
+  width: 90px;
+  color: white;
+  background-color: blue;
+  padding: 14px 20px;
+  margin: 8px 0;
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+}
+
+input[type=submit]:hover {
+  background-color: #45a049;
+}
+#results {
+  font-family: "Trebuchet MS", Arial, Helvetica, sans-serif;
+  width: 100%;
+}
+
+#results td, #customers th {
+  align: center;
+  border: none;
+  padding: 8px;
+}
+
+#results tr:nth-child(even){background-color: #f2f2f2;}
+
+#results tr:hover {background-color: #ddd;}
+
+#results th {
+  padding-top: 12px;
+  padding-bottom: 12px;
+  text-align: left;
+  background-color: #add8e6;
+  color: white;
+}
+
+</style>
+<head>
+  <meta charset="UTF-8">
+  <title>ProSearch</title>
+</head>
+<body>
+<div>
+  <center>
+  	<h1>Prosearch</h1>
+  	<img src="\logo.png" alt="Prosearch" width="200" height="200"><br>
+  	<input type="text" id="query" onclick="this.select()" onKeyDown="if(event.keyCode==13) search();">
+  	<button onclick="search()">Search</button><br>
+  	isproj-vm01.informatik.uni-kl.de : <input type="checkbox" id="c1"> 
+  	isproj-vm06.informatik.uni-kl.de : <input type="checkbox" id="c6"><br>
+  
+  		<div id="imageResults"></div>
+  		<div id="results"></div>
+  	
+  		<div id="ads"></div>
+  	</center>
+</div>
+<script>
+function search(){
+	//alert("hjhjhjhj");
+	var finalHosts = "isproj-vm07.informatik.uni-kl.de,";
+	var c = false;
+	var checkBox1 = document.getElementById("c1");
+	var checkBox6 = document.getElementById("c6");
+	//alert("hi"+checkBox1.checked+checkBox6.checked);
+	if (checkBox1.checked == true){
+    	finalHosts = finalHosts + "isproj-vm01.informatik.uni-kl.de";
+    	c=true;
+	}
+	if (checkBox6.checked == true && c==true){
+    	finalHosts = finalHosts + ","+"isproj-vm06.informatik.uni-kl.de";
+	}
+	else if(checkBox6.checked == true){
+		finalHosts = finalHosts +"isproj-vm06.informatik.uni-kl.de";
+	} 
+	var url = "http://localhost:8080/metaSearch?query="+document.getElementById('query').value+"&host="+finalHosts+"&topk=5";
+	//var url = "http://131.246.117.36:8080/metaSearch?query="+document.getElementById('query').value+"&host="+finalHosts+"&topk=5";
+    var xmlHttp = new XMLHttpRequest();
+    xmlHttp.open( "GET", url, false );
+    xmlHttp.send( null );
+    var str = JSON.parse(xmlHttp.responseText);
+    addTable(str.resultList);
+}
+function addTable(str) {
+	document.getElementById("results").innerHTML = "";
+	if(str.length==0){
+		document.getElementById("results").innerHTML = "No results found";
+		document.getElementById("results").style.textAlign = "center";
+		return;
+	}
+    var myTableDiv = document.getElementById("results")
+    var table = document.createElement('TABLE')
+    var tableBody = document.createElement('TBODY')
+
+    table.appendChild(tableBody);
+
+    var heading = new Array();
+    heading[0] = "Host"
+    heading[1] = "Url"
+
+    var stock = new Array()
+    for(var i=0;i<str.length;i++){
+    	stock[i]= new Array(str[i].host ,str[i].url )
+    }
+    
+
+    //TABLE COLUMNS
+    var tr = document.createElement('TR');
+    tableBody.appendChild(tr);
+    for (i = 0; i < heading.length; i++) {
+        var th = document.createElement('TH')
+        th.width = '75';
+        th.appendChild(document.createTextNode(heading[i]));
+        tr.appendChild(th);
+    }
+
+    //TABLE ROWS
+    for (i = 0; i < stock.length; i++) {
+        var tr = document.createElement('TR');
+        for (j = 0; j < stock[i].length; j++) {
+            var td = document.createElement('TD')
+            td.appendChild(document.createTextNode(stock[i][j]));
+            tr.appendChild(td)
+        }
+        tableBody.appendChild(tr);
+    }  
+    myTableDiv.appendChild(table)
+}
+</script>
+</body>
+
+</html>

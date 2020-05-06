@@ -1,0 +1,107 @@
+<!DOCTYPE html>
+<html lang="en">
+<style>
+input[type=text], select {
+  width: 25%;
+  padding: 12px 20px;
+  margin: 8px 0;
+  display: inline-block;
+  border: 1px solid #ccc;
+  border-radius: 4px;
+  box-sizing: border-box;
+}
+input[type=number], select {
+  width: 25%;
+  padding: 12px 20px;
+  margin: 8px 0;
+  display: inline-block;
+  border: 1px solid #ccc;
+  border-radius: 4px;
+  box-sizing: border-box;
+}
+button{
+  width: 90px;
+  color: white;
+  background-color: blue;
+  padding: 14px 20px;
+  margin: 8px 0;
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+}
+
+input[type=submit]:hover {
+  background-color: #45a049;
+}
+#results {
+  font-family: "Trebuchet MS", Arial, Helvetica, sans-serif;
+  width: 100%;
+}
+
+#results td, #customers th {
+  align: center;
+  border: none;
+  padding: 8px;
+}
+
+#results tr:nth-child(even){background-color: #f2f2f2;}
+
+#results tr:hover {background-color: #ddd;}
+
+#results th {
+  padding-top: 12px;
+  padding-bottom: 12px;
+  text-align: left;
+  background-color: #add8e6;
+  color: white;
+}
+
+</style>
+<head>
+  <meta charset="UTF-8">
+  <title>Post an Ad on ProSearch</title>
+</head>
+<body>
+<div>
+  <center>
+  	<h1>Post an Ad on Prosearch</h1>
+  	<h4 id="allDetails" style="display:none;color:red">Enter all details</h4>
+  	<h4 id="success" style="display:none;color:green">Posted Ad successfully</h4>
+  	<h4 id="failure" style="display:none;color:red">Ad already exists</h4>
+  	Redirect Ad to this URL: <input type="text" id="url" onclick="this.post()" onKeyDown="if(event.keyCode==13) post();"><br>
+  	Image URL : <input type="text" id="image_url" onclick="this.post()" onKeyDown="if(event.keyCode==13) post();"><br>
+  	Text to be displayed with the Ad: <input type="text" id="text" onclick="this.post()" onKeyDown="if(event.keyCode==13) post();"><br>
+  	N grams: <input type="text" id="ngrams" onclick="this.post()" onKeyDown="if(event.keyCode==13) post();"><br>
+  	Budget: <input type="number" id="budget" onclick="this.post()" onKeyDown="if(event.keyCode==13) post();"><br><br>
+  	<button onclick="post()">Post Ad</button><br>
+  </center>
+</div>
+<script>
+function post(){
+	document.getElementById("allDetails").style.display = 'none';
+	var url = document.getElementById("url").value;
+	var image_url = document.getElementById("image_url").value;
+	var budget = document.getElementById("budget").value;
+	var text = document.getElementById("text").value;
+	var ngrams = document.getElementById("ngrams").value;
+	if(url === "" || image_url === "" || budget === "" || text === "" || ngrams === ""){
+		document.getElementById("allDetails").style.display = 'block';
+	}
+	else{
+		var url = "http://localhost:8080/postAd?nGrams="+ngrams+"&url="+url+"&imageUrl="+image_url+"&text="+text+"&budget="+budget;
+		//var url = "http://131.246.117.36:8080/postAd?nGrams="+ngrams+"&url="+url+"&imageUrl="+image_url+"&text="+text+"&budget="+budget;
+	    var xmlHttp = new XMLHttpRequest();
+	    xmlHttp.open( "GET", url, false );
+	    xmlHttp.send( null );
+	    if(xmlHttp.status === 200){
+	    	document.getElementById("success").style.display = 'block';
+	    }
+	    else if(xmlHttp.status === 500){
+	    	document.getElementById("failure").style.display = 'block';
+	    }
+	}
+}
+</script>
+</body>
+
+</html>

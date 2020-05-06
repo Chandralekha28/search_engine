@@ -1,0 +1,241 @@
+<!DOCTYPE html>
+<html lang="en">
+<style>
+#div1 { width: 75%; float:left }
+#div2 { width: 25%; float:right; background: #F8F6F5 }
+input[type=text], select {
+  width: 25%;
+  padding: 12px 20px;
+  margin: 8px 0;
+  display: inline-block;
+  border: 1px solid #ccc;
+  border-radius: 4px;
+  box-sizing: border-box;
+}
+
+button{
+  width: 90px;
+  color: white;
+  background-color: blue;
+  padding: 14px 20px;
+  margin: 8px 0;
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+}
+
+input[type=submit]:hover {
+  background-color: #45a049;
+}
+#results {
+  font-family: "Trebuchet MS", Arial, Helvetica, sans-serif;
+  width: 100%;
+}
+
+#results td, #customers th {
+  align: center;
+  border: none;
+  padding: 8px;
+}
+
+#results tr:nth-child(even){background-color: #f2f2f2;}
+
+#results tr:hover {background-color: #ddd;}
+
+#results th {
+  padding-top: 12px;
+  padding-bottom: 12px;
+  text-align: left;
+  background-color: #add8e6;
+  color: white;
+}
+.container {
+  position: relative;
+  font-family: Arial;
+}
+.text-block {
+  color: black;
+  padding-top: 20px;
+  padding-left: 20px;
+  padding-right: 20px;
+}
+</style>
+<head>
+  <meta charset="UTF-8">
+  <title>ProSearch</title>
+</head>
+<body>
+<div>
+  <center>
+  	<h1>Prosearch</h1>
+  	<img src="\logo.png" alt="Prosearch" width="200" height="200"><br>
+  	<input type="text" id="query" onclick="this.select()" onKeyDown="if(event.keyCode==13) search();">
+  	<button onclick="search()">Search</button><br>
+  	Check for German : <input type="checkbox" id="myCheck"> 
+  	Check for Images : <input type="checkbox" id="myCheckImage"><br>
+  	<p id="dummy"></p><a href="javascript:searchAlternate()" id="didYouMean"> </a>
+  	<p id="demo"></p>
+  	<br>
+  </center>
+  	<div id="div1">
+  		<div id="imageResults"></div>
+  		<div id="results"></div>
+  	</div>
+  	<div id="div2">
+  		<div id="ads"></div>
+  	</div>
+</div>
+<script>
+function searchAlternate(){
+	var abc = document.getElementById("didYouMean").innerHTML;
+	document.getElementById("query").value = abc;
+	search();
+}
+function search()
+{
+	var checkBox = document.getElementById("myCheck");
+	var imageCheckBox = document.getElementById("myCheckImage");
+	document.getElementById("results").innerHTML = "";
+    document.getElementById("imageResults").innerHTML = "";
+    document.getElementById("ads").innerHTML = "";
+
+	var lang = "";
+	if (checkBox.checked == true){
+    	lang = "de";
+	}else {
+	    lang = "en";
+	}
+	if (imageCheckBox.checked == true){
+		var url = "http://localhost:8080/getImages?query="+document.getElementById('query').value+"&language="+lang;
+		//var url = "http://131.246.117.36:8080/getImages?query="+document.getElementById('query').value+"&language="+lang;
+	    var xmlHttp = new XMLHttpRequest();
+	    xmlHttp.open( "GET", url, false );
+	    xmlHttp.send( null );
+	    var str = JSON.parse(xmlHttp.responseText);
+	    for(var i=0;i<str.length;i++){
+	    	var img = document.createElement("img");
+			img.src = str[i].url;
+			document.getElementById("imageResults").appendChild(img);
+	    }
+		return;
+	}else {
+		document.getElementById("imageResults").innerHTML = "";
+	}
+	
+	//var url = "http://131.246.117.36:8080/search?query="+document.getElementById('query').value+"&topCount=20&language="+lang;
+    var url = "http://localhost:8080/search?query="+document.getElementById('query').value+"&topCount=20&language="+lang;
+    var xmlHttp = new XMLHttpRequest();
+    xmlHttp.open( "GET", url, false );
+    xmlHttp.send( null );
+    var str = JSON.parse(xmlHttp.responseText);
+    if("correctedTerms" in str){
+    	document.getElementById("results").innerHTML = "";
+    	document.getElementById("dummy").innerHTML = "Did you mean ";
+    	document.getElementById("didYouMean").innerHTML = str.correctedTerms;
+    }
+    if("resultList" in str){
+    	addTable(str.resultList);
+    }
+    if("correctedTerms"  in str ===false){
+    	document.getElementById("didYouMean").innerHTML = "";
+    	document.getElementById("dummy").innerHTML = "";
+    }
+    getAds();
+
+    return xmlHttp.responseText;
+}
+
+function getAds(){
+  	//var urlAd = "http://131.246.117.36:8080/getAds?query="+document.getElementById('query').value;
+    var urlAd = "http://localhost:8080/getAds?query="+document.getElementById('query').value;
+    var xmlHttp = new XMLHttpRequest();
+    xmlHttp.open( "GET", urlAd, false );
+    xmlHttp.send( null );
+    var strAd = JSON.parse(xmlHttp.responseText);
+	showAds(strAd);
+    return xmlHttp.responseText;
+}
+function showAds(str) {
+	for(var i=0;i<str.length;i++){
+		var divC = document.createElement("div");
+		divC.classList.add("container");
+    	var img = document.createElement("img");
+		img.src = str[i].image_url;
+    	var a = document.createElement("a");
+    	a.href = str[i].url;
+    	a.appendChild(img);
+    	var p = document.createElement("p");
+    	var divText = document.createElement("div");
+    	divText.classList.add("text-block");
+    	var node = document.createTextNode("Ad: "+str[i].text);
+    	p.appendChild(node);
+		divText.appendChild(a); 
+		divText.appendChild(p);
+		divC.appendChild(divText);
+		divC.id = str[i].url;
+    	divC.onclick = function(){
+    		reduceCost(this.id)
+  		}; 
+		document.getElementById("ads").appendChild(divC);
+    }
+}
+
+function reduceCost(str){
+	//var urlAd = "http://131.246.117.36:8080/reduceCost?url="+str;
+	alert(str)
+    var urlAd = "http://localhost:8080/reduceCost?url="+str;
+    var xmlHttp = new XMLHttpRequest();
+    xmlHttp.open( "GET", urlAd, false );
+    xmlHttp.send( null );
+    var strAd = JSON.parse(xmlHttp.responseText);
+    return xmlHttp.responseText;
+}
+function addTable(str) {
+	document.getElementById("results").innerHTML = "";
+	if(str.length==0){
+		document.getElementById("results").innerHTML = "No results found";
+		document.getElementById("results").style.textAlign = "center";
+		return;
+	}
+    var myTableDiv = document.getElementById("results")
+    var table = document.createElement('TABLE')
+    var tableBody = document.createElement('TBODY')
+
+    table.appendChild(tableBody);
+
+    var heading = new Array();
+    heading[0] = "Url"
+    heading[1] = "Content"
+
+    var stock = new Array()
+    for(var i=0;i<str.length;i++){
+    	stock[i]= new Array(str[i].url ,str[i].content )
+    }
+    
+
+    //TABLE COLUMNS
+    var tr = document.createElement('TR');
+    tableBody.appendChild(tr);
+    for (i = 0; i < heading.length; i++) {
+        var th = document.createElement('TH')
+        th.width = '75';
+        th.appendChild(document.createTextNode(heading[i]));
+        tr.appendChild(th);
+    }
+
+    //TABLE ROWS
+    for (i = 0; i < stock.length; i++) {
+        var tr = document.createElement('TR');
+        for (j = 0; j < stock[i].length; j++) {
+            var td = document.createElement('TD')
+            td.appendChild(document.createTextNode(stock[i][j]));
+            tr.appendChild(td)
+        }
+        tableBody.appendChild(tr);
+    }  
+    myTableDiv.appendChild(table)
+}
+</script>
+</body>
+
+</html>
